@@ -9,6 +9,7 @@ const masterKey = process.env.MORALIS_MASTER_KEY
 /* Importing the Node.js file system library. */
 const fs = require("fs");
 
+/* Importing the axios library. */
 const axios = require('axios');
 
 /**
@@ -28,9 +29,8 @@ const uploadImage = async (url) => {
         const file = new Moralis.File("image.png", { base64: base64Image });
 
         /* Uploading the file to IPFS. */
-        await file.saveIPFS({ useMasterKey: true });
+        await file.saveIPFS({ useMasterKey: true })
 
-        /* Returning the IPFS hash of the file. */
         return file.ipfs();
 
     } catch (error) {
@@ -56,7 +56,7 @@ const uploadMetaData = async (name, description, image) => {
         const metadata = {
             name: name,
             description: description,
-            image: image
+            animation_url: image
         }
 
         /* Creating a new Moralis File object with the metadata. */
@@ -65,7 +65,7 @@ const uploadMetaData = async (name, description, image) => {
         });
 
         /* Uploading the file to IPFS. */
-        await file.saveIPFS({ useMasterKey: true });
+        await file.saveIPFS({ useMasterKey: true })
 
         /* Returning the IPFS hash of the file. */
         return file.ipfs();
@@ -79,6 +79,48 @@ const uploadMetaData = async (name, description, image) => {
 /* Creating a new object called `nftController` with a function called `createNft`. */
 const nftController = {
 
+    /* 
+const collection = [
+    {
+        "name" : "xxxxxxx",
+        "description" : "xxxxxxx"
+        "images" : [
+            {
+                "id" : "1",
+                "url" : "http:///xxxxxxx"
+            },
+            {
+                "id" : "2",
+                "url" : "http:///xxxxxxx"
+            },
+            {
+                "id" : "3",
+                "url" : "http:///xxxxxxx"
+            }
+        ]
+    },
+    {
+        "name" : "yyyyy",
+        "description" : "yyyyy"
+        "images" : [
+            {
+                "id" : "1",
+                "url" : "http:///yyyyy"
+            },
+            {
+                "id" : "2",
+                "url" : "http:///yyyyy"
+            },
+            {
+                "id" : "3",
+                "url" : "http:///yyyyy"
+            }
+        ]
+    },
+]
+
+*/
+
     /* This is the `createNft` function. It takes in a `req` and `res` object, and returns a JSON
     object with the message, metadata, and image. */
     createNft: async (req, res) => {
@@ -89,46 +131,57 @@ const nftController = {
             /* Initializing the Moralis library. */
             await Moralis.start({ serverUrl, appId, masterKey });
 
-            /* Destructuring the `req.body` object. */
-            const { name, description, data } = req.body;
+            /* Destructuring the `req.body` object and assigning it to the `collection` variable. */
+            const { collection } = req.body
 
-            /* Calling the `uploadImage` function and passing in the `imageUrl` variable. */
-            const image = await uploadImage(data);
+            /* Creating an empty array. */
+            let result = []
 
-            /* Checking if the `image` variable is an instance of the `Error` class. If it is, it
-            returns a JSON object with the message and success. */
-            if (image instanceof Error) {
-                return res.status(400).json({
-                    message: image?.message,
-                    success: false
+            for (let x = 0; x < collection.length; x++) {
+
+                /* Uploading the image to IPFS. */
+                const image = await uploadImage(collection[x].animation_url)
+
+                /* Checking if the `image` variable is an instance of the `Error` class. If it is, it
+                   returns a JSON object with the message and success. */
+                if (image instanceof Error) {
+                    return res.status(400).json({
+                        message: image?.message,
+                        success: false
+                    })
+                }
+
+                /* Calling the `uploadMetaData` function and passing in the `name`, `description`, and
+                `image` variables. */
+                const metadata = await uploadMetaData(collection[x].name, collection[x].description, image);
+
+                /* Checking if the `metadata` variable is an instance of the `Error` class. If it is, it
+                returns a JSON object with the message and success. */
+                if (metadata instanceof Error) {
+                    return res.status(400).json({
+                        message: metadata?.message,
+                        success: false
+                    })
+                }
+
+                /* Pushing the metadata and images into the result array. */
+                result.push({
+                    "metadata": metadata,
+                    animation_url: image
                 })
             }
 
-            /* Calling the `uploadMetaData` function and passing in the `name`, `description`, and
-            `image` variables. */
-            const metadata = await uploadMetaData(name, description, image);
-
-            /* Checking if the `metadata` variable is an instance of the `Error` class. If it is, it
-                        returns a JSON object with the message and success. */
-            if (metadata instanceof Error) {
-                return res.status(400).json({
-                    message: metadata?.message,
-                    success: false
-                })
-            }
-
-            /* Returning a JSON object with the message, metadata, and image. */
-            return res.status(200).json({
-                message: "NFT created successfully",
-                metadata: metadata,
-                image: image,
-                success: true
-            });
+            /* Returning a JSON object with the message, success, and collection. */
+            return res.status(201).json({
+                message: 'Collection created successfully',
+                success: true,
+                collection: result
+            })
 
         } catch (error) {
             /* Returning a JSON object with the message and success. */
             return res.status(500).json({
-                message: 'Error creating NFT',
+                message: error?.message,
                 success: false
             })
         }

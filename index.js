@@ -11,6 +11,10 @@ const express = require('express')
 if the environment variable is not set. */
 const port = process.env.PORT || 3001;
 
+/* Importing the ParseServer module from the parse-server package. */
+//const ParseServer = require('parse-server').ParseServer;
+
+
 /* Setting the environment variable to the value of the environment 
 variable NODE_ENV or 'local' if the environment variable NODE_ENV is not set. */
 const environment = process.env.NODE_ENV || 'local'
@@ -24,8 +28,22 @@ const nft = require('./routes/nft')
 /****************************************************************************************** */
 /****************************************************************************************** */
 
+/* 
+const parseServer = new ParseServer({
+    serverUrl: process.env.MORALIS_SERVER_URL,
+    appId: process.env.MORALIS_API_ID,
+    masterKey: process.env.MORALIS_MASTER_KEY
+});
+ */
+
 /* Creating an instance of the express module. */
 const app = express()
+
+
+/* This is a middleware function that is used to tell the server to parse the body of the request as
+JSON. */
+//app.use(process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0", parseServer);
+
 
 /* Telling the server to use the routes in the file `routes/nft.js` when the path starts with `/nft`. */
 app.use('/nft', nft)
