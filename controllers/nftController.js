@@ -18,20 +18,18 @@ const axios = require('axios');
  * @param url - The path to the image file.
  * @returns The IPFS hash of the file.
  */
-const uploadImage = async (url) => {
+const uploadImage = async (file, name) => {
 
     try {
 
-        /* Converting the image file into base64. */
-        const base64Image = fs.readFileSync('./bol.jpg', { encoding: 'base64' });
 
         /* Creating a new Moralis File object. */
-        const file = new Moralis.File("image.png", { base64: base64Image });
+        const fileIpfs = new Moralis.File(name, { base64: file });
 
         /* Uploading the file to IPFS. */
-        await file.saveIPFS({ useMasterKey: true })
+        await fileIpfs.saveIPFS({ useMasterKey: true })
 
-        return file.ipfs();
+        return fileIpfs.ipfs();
 
     } catch (error) {
 
@@ -60,7 +58,7 @@ const uploadMetaData = async (name, description, image) => {
         }
 
         /* Creating a new Moralis File object with the metadata. */
-        const file = new Moralis.File("file.json", {
+        const file = new Moralis.File(`${name}_collection.json`, {
             base64: Buffer.from(JSON.stringify(metadata)).toString("base64")
         });
 
@@ -124,8 +122,8 @@ const collection = [
     /* This is the `createNft` function. It takes in a `req` and `res` object, and returns a JSON
     object with the message, metadata, and image. */
     createNft: async (req, res) => {
-
         /* This is a try/catch block. It is used to catch errors that may occur in the code. */
+
         try {
 
             /* Initializing the Moralis library. */
@@ -133,14 +131,18 @@ const collection = [
 
             /* Destructuring the `req.body` object and assigning it to the `collection` variable. */
             const { collection } = req.body
-
             /* Creating an empty array. */
             let result = []
-
+            // let arrFiles = req.files.files;
+            
+            // return res.status(200).json({
+            //     message: arrFiles[0].name,
+            //     success: false
+            // })
             for (let x = 0; x < collection.length; x++) {
 
                 /* Uploading the image to IPFS. */
-                const image = await uploadImage(collection[x].animation_url)
+                const image = await uploadImage(collection[x].file, collection[x].name)
 
                 /* Checking if the `image` variable is an instance of the `Error` class. If it is, it
                    returns a JSON object with the message and success. */

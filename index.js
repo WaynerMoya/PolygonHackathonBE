@@ -3,7 +3,7 @@
 /******************************* DECLARE LIBRARY AND MODULES ****************************** */
 /****************************************************************************************** */
 /****************************************************************************************** */
-
+const cors = require("cors")
 /* Importing the express module. */
 const express = require('express')
 
@@ -21,7 +21,6 @@ const environment = process.env.NODE_ENV || 'local'
 
 /* Importing the file `routes/nft.js` and assigning it to the variable `nft`. */
 const nft = require('./routes/nft')
-
 /****************************************************************************************** */
 /****************************************************************************************** */
 /**************************************** START CODE ************************************** */
@@ -43,14 +42,26 @@ const app = express()
 /* This is a middleware function that is used to tell the server to parse the body of the request as
 JSON. */
 //app.use(process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0", parseServer);
+const whitelist = ["http://localhost:3000"]
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || whitelist.indexOf(origin) !== -1) {
+      callback(null, true)
+    } else {
+      callback(new Error("Not allowed by CORS"))
+    }
+  },
+  credentials: true,
+}
 
-
+app.use(cors(corsOptions))
 /* Telling the server to use the routes in the file `routes/nft.js` when the path starts with `/nft`. */
-app.use('/nft', nft)
 
 /* Telling the server to parse the body of the request as JSON. */
-app.use(express.json())
+app.use(express.json({limit: '50mb'}));
+app.use(express.urlencoded({limit: '50mb'}));
 
+app.use('/nft', nft)
 /* This is a route handler. It is listening for a GET request to the root of the server. When it
 receives a GET request, it will send the response 'Hello World!'. */
 app.get('/', (req, res) => res.send('Hello World!'))
