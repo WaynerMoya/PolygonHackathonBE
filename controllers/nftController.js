@@ -5,6 +5,7 @@ const Moralis = require("moralis/node");
 const serverUrl = process.env.MORALIS_SERVER_URL
 const appId = process.env.MORALIS_API_ID
 const masterKey = process.env.MORALIS_MASTER_KEY
+const chainMoralis = process.env.MORALIS_CHAIN
 
 /* Importing the Node.js file system library. */
 const fs = require("fs");
@@ -22,7 +23,6 @@ const uploadImage = async (file, name) => {
 
     try {
 
-
         /* Creating a new Moralis File object. */
         const fileIpfs = new Moralis.File(name, { base64: file });
 
@@ -36,7 +36,6 @@ const uploadImage = async (file, name) => {
         /* Returning a new error object. */
         return new Error(error);
     }
-
 }
 
 /**
@@ -69,55 +68,13 @@ const uploadMetaData = async (name, description, image) => {
         return file.ipfs();
 
     } catch (error) {
+        /* Returning a new error object with the message "error". */
         return new Error(error);
     }
-
 }
 
 /* Creating a new object called `nftController` with a function called `createNft`. */
 const nftController = {
-
-    /* 
-const collection = [
-    {
-        "name" : "xxxxxxx",
-        "description" : "xxxxxxx"
-        "images" : [
-            {
-                "id" : "1",
-                "url" : "http:///xxxxxxx"
-            },
-            {
-                "id" : "2",
-                "url" : "http:///xxxxxxx"
-            },
-            {
-                "id" : "3",
-                "url" : "http:///xxxxxxx"
-            }
-        ]
-    },
-    {
-        "name" : "yyyyy",
-        "description" : "yyyyy"
-        "images" : [
-            {
-                "id" : "1",
-                "url" : "http:///yyyyy"
-            },
-            {
-                "id" : "2",
-                "url" : "http:///yyyyy"
-            },
-            {
-                "id" : "3",
-                "url" : "http:///yyyyy"
-            }
-        ]
-    },
-]
-
-*/
 
     /* This is the `createNft` function. It takes in a `req` and `res` object, and returns a JSON
     object with the message, metadata, and image. */
@@ -133,12 +90,7 @@ const collection = [
             const { collection } = req.body
             /* Creating an empty array. */
             let result = []
-            // let arrFiles = req.files.files;
-            
-            // return res.status(200).json({
-            //     message: arrFiles[0].name,
-            //     success: false
-            // })
+
             for (let x = 0; x < collection.length; x++) {
 
                 /* Uploading the image to IPFS. */
@@ -188,46 +140,198 @@ const collection = [
             })
         }
     },
-    /* This is a function that takes in a `req` and `res` object, and returns the file from IPFS. */
-    getFileNft: async (req, res) => {
-
-        /* This is a function that takes in a `req` and `res` object, and returns the file from IPFS. */
+    /* The above code is getting the NFT owners. */
+    getNFTOwners: async (req, res) => {
         try {
 
-            /* Destructuring the `req.body` object and assigning it to the `ipfsHash` variable. */
-            const { ipfsHash } = req.body || req.params;
+            /* Initializing the Moralis library. */
+            await Moralis.start({ serverUrl, appId, masterKey });
 
-            /* Creating a URL to the IPFS file. */
-            /* "https://ipfs.moralis.io:2053/ipfs/QmNtScDBrnS2TfHTaLMWqMRsgqWaYZYYiRhEkXL571uvkk" to 
-                QmNtScDBrnS2TfHTaLMWqMRsgqWaYZYYiRhEkXL571uvkk
-            */
-            const url = `https://gateway.moralisipfs.com/ipfs/${ipfsHash}`
+            /* Destructuring the address property from the req.body object. */
+            const { address } = req.body
 
-            /* Making a request to the IPFS gateway to get the file. */
-            const response = await axios.get(url);
+            /* Creating an object called options. */
+            const options = {
+                /* (required): Address of the contract */
+                address: address,
+                /* (optional): The blockchain to get data from */
+                chain: chainMoralis
+            };
 
-            /* Checking if the response from the IPFS gateway is empty. If it is, it returns a JSON
-            object with the message and success. */
-            if (!response) {
-                /* Returning a JSON object with the message and success. */
+            /* The above code is getting the NFT owners. */
+            const nftOwners = await Moralis.Web3API.token.getNFTOwners(options);
+
+            if (nftOwners.error || nftOwners.message || !nftOwners) {
                 return res.status(400).json({
-                    message: "File not found",
-                    success: false
+                    message: 'Error to get nft owners',
+                    success: false,
+                    nftOwners: nftOwners
                 })
             }
 
-            /* Returning a JSON object with the message, data, and success. */
+            /* The above code is searching for the NFT owners. */
             return res.status(200).json({
-                message: "File retrieved successfully",
-                data: response?.data,
-                success: true
-            });
+                message: 'NFT searched successfully',
+                success: true,
+                nftOwners: nftOwners
+            })
+
 
         } catch (error) {
 
             /* Returning a JSON object with the message and success. */
             return res.status(500).json({
-                message: 'Error getting NFT',
+                message: error?.message || 'Error to get ntf owners',
+                success: false
+            })
+        }
+    },
+    /* The above code is searching for NFTs. */
+    searchNFTs: async (req, res) => {
+        try {
+
+            /* Initializing the Moralis library. */
+            await Moralis.start({ serverUrl, appId, masterKey });
+
+            /* Destructuring the req.body object. */
+            const { value, filter } = req.body
+
+            /* The above code is creating an object called options. This object is used to pass in the
+            search parameters to the search function. */
+            const options = {
+                /* (required): The search string parameter */
+                q: value,
+                /* (optional): The blockchain to get data from. */
+                chain: chainMoralis,
+                /* (required): What fields the search should match on. To look into the 
+                entire metadata set the value to global. To have a better response time you 
+                can look into a specific field like name. Available values : name; description; 
+                attributes; global; name,description; name,attributes; description,attributes; 
+                name,description,attributes */
+                filter: filter
+            };
+
+            /* Searching for NFTs. */
+            const NFTs = await Moralis.Web3API.token.searchNFTs(options);
+
+            /* Checking for errors and returning a message if there is an error. */
+            if (NFTs.error || NFTs.message || !NFTs) {
+                return res.status(400).json({
+                    message: 'Error searching NFTs',
+                    success: false,
+                    NFTs: NFTs
+                })
+            }
+
+            /* Returning a JSON object with the message, success, and collection. */
+            return res.status(201).json({
+                message: 'NFTs searched successfully',
+                success: true,
+                NFTs: NFTs
+            })
+
+        } catch (error) {
+            /* Returning a JSON object with the message and success. */
+            return res.status(500).json({
+                message: error?.message,
+                success: false
+            })
+        }
+    },
+    /* The above code is getting the NFTs for a contract. */
+    getNFTsForContract: async (req, res) => {
+        try {
+
+            /* Initializing the Moralis library. */
+            await Moralis.start({ serverUrl, appId, masterKey });
+
+            /* Destructuring the address and token_address from the request body. */
+            const { address, token_address } = req.body
+
+            /* Creating an object called options. */
+            const options = {
+                /* (optional) The blockchain to get data from. */
+                chain: chainMoralis,
+                /* (required): Address of the contract */
+                token_address: token_address,
+            };
+
+            if (address !== undefined || address !== null) {
+                /* (optional): The owner of a given token (i.e. 0x1a2b3x...). If specified, the user 
+                attached to the query is ignored and the address will be used instead */
+                options.address = address
+            }
+
+            /* Getting the NFTs for the contract. */
+            const polygonNFTs = await Moralis.Web3API.account.getNFTsForContract(options);
+
+            if (polygonNFTs.error || polygonNFTs.message || !polygonNFTs) {
+                return res.status(400).json({
+                    message: 'Error searching polygonNFTs',
+                    success: false,
+                    polygonNFTs: polygonNFTs
+                })
+            }
+
+            /* Returning a JSON object with the message, success, and collection. */
+            return res.status(201).json({
+                message: 'polygonNFTs searched successfully',
+                success: true,
+                polygonNFTs: polygonNFTs
+            })
+
+        } catch (error) {
+            /* Returning a JSON object with the message and success. */
+            return res.status(500).json({
+                message: error?.message,
+                success: false
+            })
+        }
+    },
+    /* The above code is getting the lowest price of a NFT. */
+    getNFTLowestPrice: async (req, res) => {
+        try {
+
+            /* Initializing the Moralis library. */
+            await Moralis.start({ serverUrl, appId, masterKey });
+
+            /* Destructuring the request body. */
+            const { address, days = 7 } = req.body
+
+            /* The above code is creating an object called options. The object has two properties,
+            address and days. The address property is the address of the contract. The days property
+            is the number of days to look back to find the lowest price. */
+            const options = {
+                /* (required): Address of the contract(i.e. 0x1a2b3x...). */
+                address: address,
+                /* (optional)The number of days to look back to find the lowest price If not provided 
+                7 days will be the default*/
+                days: days,
+            };
+
+            /* Getting the lowest price of a NFT. */
+            const NFTLowestPrice = await Moralis.Web3API.token.getNFTLowestPrice(options);
+
+            /* Checking for errors and returning a message if there is an error. */
+            if (NFTLowestPrice.error || NFTLowestPrice.message || !NFTLowestPrice) {
+                return res.status(400).json({
+                    message: 'Error searching getNFTLowestPrice',
+                    success: false,
+                    NFTLowestPrice: NFTLowestPrice
+                })
+            }
+
+            /* Returning a JSON object with the message, success, and collection. */
+            return res.status(201).json({
+                message: 'NFTLowestPrice searched getNFTLowestPrice',
+                success: true,
+                NFTLowestPrice: NFTLowestPrice
+            })
+
+        } catch (error) {
+            /* Returning a JSON object with the message and success. */
+            return res.status(500).json({
+                message: error?.message,
                 success: false
             })
         }

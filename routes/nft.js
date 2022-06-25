@@ -13,8 +13,5 @@ route.use(express.json())
 /* This is creating a new route for the `/create-nft` endpoint. */
 route.post('/create-nft', nftController.createNft)
 
-/* This is creating a new route for the `/get-file-nft` endpoint. */
-route.get('/get-file-nft', nftController.getFileNft)
-
 /* This is exporting the route object so that it can be used in other files. */
 module.exports = route
