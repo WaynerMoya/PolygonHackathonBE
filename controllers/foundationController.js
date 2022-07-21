@@ -42,6 +42,7 @@ const uploadImage = async (file, name) => {
  * @returns The IPFS hash of the file.
  */
 
+
 const foundationController = {
 
     createFoundation: async (req, res) => {
