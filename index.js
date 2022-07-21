@@ -21,6 +21,9 @@ const environment = process.env.NODE_ENV || 'local'
 /* Importing the file `routes/nft.js` and assigning it to the variable `nft`. */
 const nft = require('./routes/nft')
 
+/* This is importing the file `routes/foundation.js` and assigning it to the variable `foundation`. */
+const foundation = require('./routes/foundation')
+
 /****************************************************************************************** */
 /****************************************************************************************** */
 /**************************************** START CODE ************************************** */
@@ -54,6 +57,9 @@ app.use(express.urlencoded({ limit: '50mb' }));
 
 /* Telling the server to use the routes in the file `routes/nft.js` when the path starts with `/nft`. */
 app.use('/nft', nft)
+
+/* Telling the server to use the routes in the file `routes/foundation.js` when the path starts with `/foundation`. */
+app.use('/foundation', foundation)
 
 
 /* This is a route handler. It is listening for a GET request to the root of the server. When it
