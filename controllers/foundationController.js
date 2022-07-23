@@ -51,9 +51,9 @@ const foundationController = {
             /* Initializing the Moralis library. */
             await Moralis.start({ serverUrl, appId, masterKey });
 
-            const { name, email, country, description, image } = req.body
+            const { name, email, country, description, image , ethAddress} = req.body
 
-            if (!name || !email || !country || !description || !image) {
+            if (!name || !email || !country || !description || !image || !ethAddress) {
                 return res.status(500).json({
                     message: 'please validate that all fields are sent'
                 })
@@ -78,6 +78,7 @@ const foundationController = {
             foundation.set("country", country);
             foundation.set("description", description);
             foundation.set("image", imageInIpfs);
+            foundation.set("ethAddress", ethAddress);
 
             await foundation.save()
 
@@ -127,7 +128,8 @@ const foundationController = {
 
             return res.status(200).json({
                 message: 'foundations searched successfully',
-                foundations: results
+                foundations: results,
+                success: true
             })
 
         } catch (error) {
@@ -171,6 +173,44 @@ const foundationController = {
 
             return res.status(500).json({
                 message: error?.message || 'Error to get foundation by email',
+                success: false
+            })
+
+        }
+    },
+    getFoundationByWallet: async (req, res) => {
+        try {
+
+            const { wallet } = req.params
+
+            /* Initializing the Moralis library. */
+            await Moralis.start({ serverUrl, appId, masterKey });
+
+            const Foundation = Moralis.Object.extend("Foundation");
+
+            const query = new Moralis.Query(Foundation);
+
+            query.equalTo("ethAddress", wallet);
+
+            const result = await query.first();
+
+            if (result?.length === 0) {
+                return res.status(200).json({
+                    message: 'Error to get foundation profile',
+                    success: false
+                })
+            }
+
+            return res.status(200).json({
+                message: 'foundation profile searched successfully',
+                foundation: result,
+                success: true
+            })
+
+        } catch (error) {
+
+            return res.status(500).json({
+                message: error?.message || 'Error to get foundation by wallet',
                 success: false
             })
 
