@@ -24,6 +24,9 @@ const nft = require('./routes/nft')
 /* This is importing the file `routes/foundation.js` and assigning it to the variable `foundation`. */
 const foundation = require('./routes/foundation')
 
+
+const post = require('./routes/post')
+
 /****************************************************************************************** */
 /****************************************************************************************** */
 /**************************************** START CODE ************************************** */
@@ -60,6 +63,10 @@ app.use('/nft', nft)
 
 /* Telling the server to use the routes in the file `routes/foundation.js` when the path starts with `/foundation`. */
 app.use('/foundation', foundation)
+
+
+/* Telling the server to use the routes in the file `routes/post.js` when the path starts with `/post`. */
+app.use('/post', post)
 
 
 /* This is a route handler. It is listening for a GET request to the root of the server. When it
