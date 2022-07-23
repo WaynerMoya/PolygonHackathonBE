@@ -1,6 +1,5 @@
 /* Importing the Moralis library. */
 const Moralis = require("moralis/node");
-const { param } = require("../routes/foundation");
 
 /* This is how you can use environment variables in Node.js. */
 const serverUrl = process.env.MORALIS_SERVER_URL
