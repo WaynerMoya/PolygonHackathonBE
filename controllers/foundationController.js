@@ -1,12 +1,12 @@
 /* Importing the Moralis library. */
 const Moralis = require("moralis/node");
+const { param } = require("../routes/foundation");
 
 /* This is how you can use environment variables in Node.js. */
 const serverUrl = process.env.MORALIS_SERVER_URL
 const appId = process.env.MORALIS_API_ID
 const masterKey = process.env.MORALIS_MASTER_KEY
 const chainMoralis = process.env.MORALIS_CHAIN
-
 
 
 /**
@@ -70,6 +70,7 @@ const foundationController = {
             }
 
             const Foundation = Moralis.Object.extend("Foundation");
+
             const foundation = new Foundation();
 
             foundation.set("name", name);
@@ -95,13 +96,85 @@ const foundationController = {
 
 
         } catch (error) {
+
             /* Returning a JSON object with the message and success. */
             return res.status(500).json({
                 message: error?.message,
                 success: false
             })
+
         }
 
+    },
+    getFoundations: async (req, res) => {
+        try {
+
+            /* Initializing the Moralis library. */
+            await Moralis.start({ serverUrl, appId, masterKey });
+
+            const Foundation = Moralis.Object.extend("Foundation");
+
+            const query = new Moralis.Query(Foundation);
+
+            const results = await query.find();
+
+            if (!results) {
+                return res.status(404).json({
+                    message: 'Error to get foundations',
+                    success: false
+                })
+            }
+
+            return res.status(200).json({
+                message: 'foundations searched successfully',
+                foundations: results
+            })
+
+        } catch (error) {
+
+            return res.status(500).json({
+                message: error?.message || 'Error to get foundations',
+                success: false
+            })
+
+        }
+    },
+    getFoundationByEmail: async (req, res) => {
+        try {
+
+            const { email } = req.params
+
+            /* Initializing the Moralis library. */
+            await Moralis.start({ serverUrl, appId, masterKey });
+
+            const Foundation = Moralis.Object.extend("Foundation");
+
+            const query = new Moralis.Query(Foundation);
+
+            query.equalTo("email", email);
+
+            const result = await query.find();
+
+            if (result?.length === 0) {
+                return res.status(404).json({
+                    message: 'Error to get foundation profile',
+                    success: false
+                })
+            }
+
+            return res.status(200).json({
+                message: 'foundation profile searched successfully',
+                foundation: result
+            })
+
+        } catch (error) {
+
+            return res.status(500).json({
+                message: error?.message || 'Error to get foundation by email',
+                success: false
+            })
+
+        }
     }
 }
 

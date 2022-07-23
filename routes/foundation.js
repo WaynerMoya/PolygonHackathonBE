@@ -11,5 +11,9 @@ const foundationController = require('../controllers/foundationController')
 listening to. The second parameter is the function that will be executed when the route is called. */
 route.post('/create-foundation', foundationController.createFoundation)
 
+route.get('/get-foundations', foundationController.getFoundations)
+
+route.get('/get-foundation-by-email/:email', foundationController.getFoundationByEmail)
+
 /* Exporting the route object so that it can be used in other files. */
 module.exports = route;
