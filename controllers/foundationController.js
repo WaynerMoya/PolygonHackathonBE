@@ -192,8 +192,7 @@ const foundationController = {
             query.equalTo("ethAddress", wallet);
 
             const result = await query.first();
-
-            if (result?.length === 0) {
+            if (!result) {
                 return res.status(200).json({
                     message: 'Error to get foundation profile',
                     success: false
