@@ -141,6 +141,52 @@ const postController = {
                 success: false
             })
         }
+    },
+    
+    getPostByFoundationWallet: async (req, res) => {
+        try {
+
+            const { ethAddress } = req.params
+
+            if (!ethAddress) {
+                return res.status(500).json({
+                    message: 'Please send the ethAddress of foundation',
+                    success: false
+                })
+            }
+
+            /* Initializing the Moralis library. */
+            await Moralis.start({ serverUrl, appId, masterKey });
+
+            const Post = Moralis.Object.extend("Post");
+
+            const query = new Moralis.Query(Post);
+
+            query.equalTo("ethAddress", ethAddress);
+
+            const results = await query.find();
+
+            if (results.length == 0) {
+                return res.status(404).json({
+                    message: 'This foundation does not have posts yet',
+                    success: true
+                })
+            }
+
+            return res.status(200).json({
+                message: 'Post searching successfully',
+                success: true,
+                results
+            })
+
+
+        } catch (error) {
+            /* Returning a JSON object with the message and success. */
+            return res.status(500).json({
+                message: error?.message,
+                success: false
+            })
+        }
     }
 }
 
