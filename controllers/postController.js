@@ -50,10 +50,6 @@ const postController = {
             /* Initializing the Moralis library. */
             await Moralis.start({ serverUrl, appId, masterKey });
 
-
-
-
-
             const imageInIpfs = await uploadImage(image, title)
 
             if (imageInIpfs instanceof Error) {
