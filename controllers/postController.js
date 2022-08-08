@@ -38,9 +38,9 @@ const postController = {
         try {
 
 
-            const { name_foundation, title, description, image, address } = req.body
+            const { ethAddress, title, description, image } = req.body
 
-            if (!name_foundation || !title || !description || !image || !address) {
+            if (!ethAddress || !title || !description || !image) {
                 return res.status(500).json({
                     message: 'please validate that all fields are sent',
                     success: false
@@ -71,8 +71,7 @@ const postController = {
             post.set("title", title);
             post.set("description", description);
             post.set("image", imageInIpfs);
-            post.set("address", address);
-            post.set('name_foundation', name_foundation)
+            post.set("ethAddress", ethAddress);
 
             await post.save()
 
