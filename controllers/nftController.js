@@ -7,6 +7,9 @@ const appId = process.env.MORALIS_API_ID
 const masterKey = process.env.MORALIS_MASTER_KEY
 const chainMoralis = process.env.MORALIS_CHAIN
 
+const getParametersNameAndValue = require("../global/ssm-parameters")
+
+
 /* Importing the Node.js file system library. */
 const fs = require("fs");
 
@@ -83,8 +86,14 @@ const nftController = {
 
         try {
 
+            const params = await getParametersNameAndValue()
+
             /* Initializing the Moralis library. */
-            await Moralis.start({ serverUrl, appId, masterKey });
+            await Moralis.start({
+                serverUrl: params['moralis-server-url'].value,
+                appId: params['moralis-api-id'].value,
+                masterKey: params['moralis-master-key'].value
+            });
 
             /* Destructuring the `req.body` object and assigning it to the `collection` variable. */
             const { collection } = req.body
@@ -144,8 +153,14 @@ const nftController = {
     getNFTOwners: async (req, res) => {
         try {
 
+            const params = await getParametersNameAndValue()
+
             /* Initializing the Moralis library. */
-            await Moralis.start({ serverUrl, appId, masterKey });
+            await Moralis.start({
+                serverUrl: params['moralis-server-url'].value,
+                appId: params['moralis-api-id'].value,
+                masterKey: params['moralis-master-key'].value
+            });
 
             /* Destructuring the address property from the req.body object. */
             const { address } = req.body
@@ -190,8 +205,14 @@ const nftController = {
     searchNFTs: async (req, res) => {
         try {
 
+            const params = await getParametersNameAndValue()
+
             /* Initializing the Moralis library. */
-            await Moralis.start({ serverUrl, appId, masterKey });
+            await Moralis.start({
+                serverUrl: params['moralis-server-url'].value,
+                appId: params['moralis-api-id'].value,
+                masterKey: params['moralis-master-key'].value
+            });
 
             /* Destructuring the req.body object. */
             const { value, filter } = req.body
@@ -242,8 +263,14 @@ const nftController = {
     getNFTsForContract: async (req, res) => {
         try {
 
+            const params = await getParametersNameAndValue()
+
             /* Initializing the Moralis library. */
-            await Moralis.start({ serverUrl, appId, masterKey });
+            await Moralis.start({
+                serverUrl: params['moralis-server-url'].value,
+                appId: params['moralis-api-id'].value,
+                masterKey: params['moralis-master-key'].value
+            });
 
             /* Destructuring the address and token_address from the request body. */
             const { address, token_address } = req.body
@@ -292,8 +319,14 @@ const nftController = {
     getNFTLowestPrice: async (req, res) => {
         try {
 
+            const params = await getParametersNameAndValue()
+
             /* Initializing the Moralis library. */
-            await Moralis.start({ serverUrl, appId, masterKey });
+            await Moralis.start({
+                serverUrl: params['moralis-server-url'].value,
+                appId: params['moralis-api-id'].value,
+                masterKey: params['moralis-master-key'].value
+            });
 
             /* Destructuring the request body. */
             const { address, days = 7 } = req.body

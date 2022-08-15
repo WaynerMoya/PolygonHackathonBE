@@ -7,6 +7,8 @@ const appId = process.env.MORALIS_API_ID
 const masterKey = process.env.MORALIS_MASTER_KEY
 const chainMoralis = process.env.MORALIS_CHAIN
 
+const getParametersNameAndValue = require("../global/ssm-parameters")
+
 
 /**
  * It takes a URL to an image, converts it to base64, uploads it to IPFS, 
@@ -47,10 +49,16 @@ const foundationController = {
     createFoundation: async (req, res) => {
         try {
 
-            /* Initializing the Moralis library. */
-            await Moralis.start({ serverUrl, appId, masterKey });
+            const params = await getParametersNameAndValue()
 
-            const { name, email, country, description, image , ethAddress} = req.body
+            /* Initializing the Moralis library. */
+            await Moralis.start({
+                serverUrl: params['moralis-server-url'].value,
+                appId: params['moralis-api-id'].value,
+                masterKey: params['moralis-master-key'].value
+            });
+
+            const { name, email, country, description, image, ethAddress } = req.body
 
             if (!name || !email || !country || !description || !image || !ethAddress) {
                 return res.status(500).json({
@@ -109,8 +117,14 @@ const foundationController = {
     getFoundations: async (req, res) => {
         try {
 
+            const params = await getParametersNameAndValue()
+
             /* Initializing the Moralis library. */
-            await Moralis.start({ serverUrl, appId, masterKey });
+            await Moralis.start({
+                serverUrl: params['moralis-server-url'].value,
+                appId: params['moralis-api-id'].value,
+                masterKey: params['moralis-master-key'].value
+            });
 
             const Foundation = Moralis.Object.extend("Foundation");
 
@@ -145,8 +159,14 @@ const foundationController = {
 
             const { email } = req.params
 
+            const params = await getParametersNameAndValue()
+
             /* Initializing the Moralis library. */
-            await Moralis.start({ serverUrl, appId, masterKey });
+            await Moralis.start({
+                serverUrl: params['moralis-server-url'].value,
+                appId: params['moralis-api-id'].value,
+                masterKey: params['moralis-master-key'].value
+            });
 
             const Foundation = Moralis.Object.extend("Foundation");
 
@@ -182,8 +202,14 @@ const foundationController = {
 
             const { wallet } = req.params
 
+            const params = await getParametersNameAndValue()
+
             /* Initializing the Moralis library. */
-            await Moralis.start({ serverUrl, appId, masterKey });
+            await Moralis.start({
+                serverUrl: params['moralis-server-url'].value,
+                appId: params['moralis-api-id'].value,
+                masterKey: params['moralis-master-key'].value
+            });
 
             const Foundation = Moralis.Object.extend("Foundation");
 
