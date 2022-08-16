@@ -1,15 +1,6 @@
 /* Importing the Moralis library. */
 const Moralis = require("moralis/node");
 
-/* This is how you can use environment variables in Node.js. */
-const serverUrl = process.env.MORALIS_SERVER_URL
-const appId = process.env.MORALIS_API_ID
-const masterKey = process.env.MORALIS_MASTER_KEY
-const chainMoralis = process.env.MORALIS_CHAIN
-
-const getParametersNameAndValue = require("../global/ssm-parameters")
-
-
 /**
  * It takes a URL to an image, converts it to base64, uploads it to IPFS, 
  * and returns the IPFS hash
@@ -40,7 +31,6 @@ const postController = {
     createPost: async (req, res) => {
         try {
 
-
             const { ethAddress, title, description, image } = req.body
 
             if (!ethAddress || !title || !description || !image) {
@@ -49,15 +39,6 @@ const postController = {
                     success: false
                 })
             }
-
-            const params = await getParametersNameAndValue()
-
-            /* Initializing the Moralis library. */
-            await Moralis.start({
-                serverUrl: params['moralis-server-url'].value,
-                appId: params['moralis-api-id'].value,
-                masterKey: params['moralis-master-key'].value
-            });
 
             const imageInIpfs = await uploadImage(image, title)
 
@@ -113,15 +94,6 @@ const postController = {
                 })
             }
 
-            const params = await getParametersNameAndValue()
-
-            /* Initializing the Moralis library. */
-            await Moralis.start({
-                serverUrl: params['moralis-server-url'].value,
-                appId: params['moralis-api-id'].value,
-                masterKey: params['moralis-master-key'].value
-            });
-
             const Post = Moralis.Object.extend("Post");
 
             const query = new Moralis.Query(Post);
@@ -164,15 +136,6 @@ const postController = {
                     success: false
                 })
             }
-
-            const params = await getParametersNameAndValue()
-
-            /* Initializing the Moralis library. */
-            await Moralis.start({
-                serverUrl: params['moralis-server-url'].value,
-                appId: params['moralis-api-id'].value,
-                masterKey: params['moralis-master-key'].value
-            });
 
             const Post = Moralis.Object.extend("Post");
 

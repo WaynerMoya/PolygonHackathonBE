@@ -9,6 +9,7 @@ const postController = require('../controllers/postController')
 route.post('/create-post', postController.createPost)
 
 route.get('/get-posts-by-foundation-name/:name_foundation', postController.getPostByFoundation)
+
 route.get('/get-posts-by-foundation-wallet/:ethAddress', postController.getPostByFoundationWallet)
 
 

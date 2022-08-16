@@ -10,8 +10,10 @@ const nftController = require('../controllers/nftController')
 /* This is a middleware that is used to parse the request body. */
 route.use(express.json())
 
+route.post('/create-one-nft', nftController.createOneNFT)
+
 /* This is creating a new route for the `/create-nft` endpoint. */
-route.post('/create-nft', nftController.createNft)
+route.post('/create-collection-nfts', nftController.createCollectionNfts)
 
 /* This is exporting the route object so that it can be used in other files. */
 module.exports = route

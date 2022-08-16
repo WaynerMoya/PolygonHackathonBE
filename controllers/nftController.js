@@ -13,8 +13,6 @@ const getParametersNameAndValue = require("../global/ssm-parameters")
 /* Importing the Node.js file system library. */
 const fs = require("fs");
 
-/* Importing the axios library. */
-const axios = require('axios');
 
 /**
  * It takes a URL to an image, converts it to base64, uploads it to IPFS, 
@@ -48,7 +46,7 @@ const uploadImage = async (file, name) => {
  * @param image - The image file to be uploaded.
  * @returns The IPFS hash of the file.
  */
-const uploadMetaData = async (name, description, image) => {
+const uploadMetaData = async (name, description, image, price) => {
 
     try {
 
@@ -56,7 +54,8 @@ const uploadMetaData = async (name, description, image) => {
         const metadata = {
             name: name,
             description: description,
-            animation_url: image
+            animation_url: image,
+            price: price
         }
 
         /* Creating a new Moralis File object with the metadata. */
@@ -79,9 +78,57 @@ const uploadMetaData = async (name, description, image) => {
 /* Creating a new object called `nftController` with a function called `createNft`. */
 const nftController = {
 
+    createOneNFT: async (req, res) => {
+
+        try {
+
+            const { name, description, file, price } = req.body
+
+            if (!name || !description || !file || !price) {
+                return res.status(500).json({
+                    success: false,
+                    message: 'Missing parameters'
+                })
+            }
+
+            /* Uploading the image to IPFS. */
+            const image = await uploadImage(file, name)
+
+            if (image instanceof Error) {
+                return res.status(400).json({
+                    message: image?.message,
+                    success: false
+                })
+            }
+
+            const metadata = await uploadMetaData(name, description, image, price);
+
+            if (metadata instanceof Error) {
+                return res.status(400).json({
+                    message: metadata?.message,
+                    success: false
+                })
+            }
+
+            /* Returning a JSON object with the message, success, and collection. */
+            res.status(201).json({
+                message: 'Collection created successfully',
+                success: true,
+                nft: metadata
+            })
+
+        } catch (error) {
+
+            res.status(500).json({
+                success: false,
+                message: error?.message || 'Something fall'
+            })
+        }
+    },
+
     /* This is the `createNft` function. It takes in a `req` and `res` object, and returns a JSON
     object with the message, metadata, and image. */
-    createNft: async (req, res) => {
+    createCollectionNfts: async (req, res) => {
         /* This is a try/catch block. It is used to catch errors that may occur in the code. */
 
         try {

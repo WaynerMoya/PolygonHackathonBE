@@ -16,5 +16,6 @@ route.get('/get-foundations', foundationController.getFoundations)
 route.get('/get-foundation-by-email/:email', foundationController.getFoundationByEmail)
 
 route.get('/get-foundation-by-wallet/:wallet', foundationController.getFoundationByWallet)
+
 /* Exporting the route object so that it can be used in other files. */
 module.exports = route;
