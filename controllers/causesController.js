@@ -72,25 +72,31 @@ const causeController = {
 
             const { wallet } = req.params
 
-            const Cause = Moralis.Object.extend("Cause");
+            const Cause = Moralis.Object.extend("Causes");
 
             const query = new Moralis.Query(Cause);
 
-            query.equalTo("ethAddress", wallet);
+            query.equalTo("nftArtist", wallet);
 
-            const result = await query.first();
-
+            const result = await query.find();
+           
+              
             if (!result) {
                 return res.status(200).json({
                     message: 'Error to get cause',
                     success: false
                 })
             }
-
+            // const options = {
+            //     chain: "mumbai",
+            //     address: result.get('contractAddress')
+            //   };
+            // const balances = await Moralis.Web3API.account.getTokenBalances(options)
             return res.status(200).json({
                 message: 'cause searched successfully',
-                cause: result,
-                success: true
+                causes: result,
+                success: true,
+                // balances
             })
 
         } catch (error) {

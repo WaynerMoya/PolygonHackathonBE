@@ -46,7 +46,7 @@ const uploadImage = async (file, name) => {
  * @param image - The image file to be uploaded.
  * @returns The IPFS hash of the file.
  */
-const uploadMetaData = async (name, description, image, price) => {
+const uploadMetaData = async (name, description, image) => {
 
     try {
 
@@ -54,8 +54,7 @@ const uploadMetaData = async (name, description, image, price) => {
         const metadata = {
             name: name,
             description: description,
-            animation_url: image,
-            price: price
+            animation_url: image
         }
 
         /* Creating a new Moralis File object with the metadata. */
@@ -82,9 +81,9 @@ const nftController = {
 
         try {
 
-            const { name, description, file, price } = req.body
+            const { name, description, file } = req.body
 
-            if (!name || !description || !file || !price) {
+            if (!name || !description || !file) {
                 return res.status(500).json({
                     success: false,
                     message: 'Missing parameters'
@@ -101,7 +100,7 @@ const nftController = {
                 })
             }
 
-            const metadata = await uploadMetaData(name, description, image, price);
+            const metadata = await uploadMetaData(name, description, image);
 
             if (metadata instanceof Error) {
                 return res.status(400).json({
