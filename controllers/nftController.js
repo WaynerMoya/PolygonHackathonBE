@@ -414,6 +414,132 @@ const nftController = {
                 success: false
             })
         }
+    },
+    getNewestNFTs: async (req, res) => {
+        try {
+
+            const Causes = Moralis.Object.extend("Causes");
+
+            const query = new Moralis.Query(Causes);
+
+            const pipeline = [
+                {
+                    lookup: {
+                        from: 'Foundation',
+                        localField: 'nftArtist',
+                        foreignField: 'ethAddress',
+                        as: 'ethAddress'
+                    }
+                }
+            ]
+
+            const results = await query.aggregate(pipeline);
+
+            if (!results) {
+                return res.status(404).json({
+                    message: 'Error to get causes',
+                    success: false
+                })
+            }
+
+            const causesWithCustomContractAddress = results.map(cause => {
+
+                const { contractAddress, nftArtist } = cause
+
+                const { image, name } = cause.ethAddress[0]
+
+                const contractAddressWithoutNumber = contractAddress.replace(/[0-9]/g, '');
+
+                return {
+                    contractAddressWithoutNumber,
+                    nftArtist,
+                    image,
+                    name
+                }
+            })
+
+            const newest30NFTs = []
+
+            for (let i = 0; i < causesWithCustomContractAddress.length; i++) {
+
+                const table = Moralis.Object.extend(causesWithCustomContractAddress[i].contractAddressWithoutNumber);
+
+                const query = new Moralis.Query(table);
+
+                const results = await query.find();
+
+                const nftsCausesWithOutNumbers = results.map(nft => {
+
+                    const { uid, tokenUri, owner, createdAt } = nft.attributes
+
+                    return {
+                        contractAddressWithoutNumber: causesWithCustomContractAddress[i].contractAddressWithoutNumber,
+                        nftArtist: causesWithCustomContractAddress[i].nftArtist,
+                        imageFoundation: causesWithCustomContractAddress[i].image,
+                        nameFoundation: causesWithCustomContractAddress[i].name,
+                        uid,
+                        tokenUri,
+                        owner,
+                        createdAt
+                    }
+                })
+
+                newest30NFTs.push(...nftsCausesWithOutNumbers)
+            }
+
+            const sortArrayNFTs = newest30NFTs.sort(
+                (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+            ).slice(0, 30)
+
+            res.status(200).json({
+                success: true,
+                message: 'Get newest NFTs successfully',
+                nfts: sortArrayNFTs
+            })
+
+        } catch (error) {
+            /* Returning a JSON object with the message and success. */
+            return res.status(500).json({
+                message: error?.message,
+                success: false
+            })
+        }
+    },
+    getNFTsFromCause: async (req, res) => {
+
+        try {
+
+            const { address } = req.params
+
+            if (!address) {
+                return res.status(500).json({
+                    success: false,
+                    message: 'Missing parameter'
+                })
+            }
+
+            const addressCauseWithOutNumber = address.replace(/[0-9]/g, '');
+
+            const tableCauseNFTs = Moralis.Object.extend(addressCauseWithOutNumber);
+
+            const query = new Moralis.Query(tableCauseNFTs);
+
+            const results = await query.find();
+
+            res.status(200).json({
+                success: true,
+                message: 'Get NFTs from cause successfully',
+                nfts: results
+            })
+
+        } catch (error) {
+            /* Returning a JSON object with the message and success. */
+            return res.status(500).json({
+                message: error?.message,
+                success: false
+            })
+        }
+
     }
 }
 
