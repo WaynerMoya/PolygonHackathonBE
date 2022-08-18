@@ -107,6 +107,42 @@ const causeController = {
             })
 
         }
+    },
+    getStepsByAddress: async (req, res) => {
+        try {
+
+            const { address } = req.params
+
+            const Steps = Moralis.Object.extend("Steps");
+
+            const query = new Moralis.Query(Steps);
+
+            query.equalTo("contractAddress", address);
+
+            const result = await query.find();
+           
+              
+            if (!result) {
+                return res.status(200).json({
+                    message: 'Error to get cause',
+                    success: false
+                })
+            }
+            return res.status(200).json({
+                message: 'cause searched successfully',
+                steps: result,
+                success: true,
+                // balances
+            })
+
+        } catch (error) {
+
+            return res.status(500).json({
+                success: false,
+                message: error.message || 'Error to get cause by wallet'
+            })
+
+        }
     }
 
 }
