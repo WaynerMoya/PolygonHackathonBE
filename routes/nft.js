@@ -19,5 +19,7 @@ route.get('/get-newest-nfts', nftController.getNewestNFTs)
 
 route.get('/get-nfts-from-cause/:address', nftController.getNFTsFromCause)
 
+route.get('/get-nfts-from-address-and-tokenid/:address/:id', nftController.getNFTsFromAddressAndTokenId)
+
 /* This is exporting the route object so that it can be used in other files. */
 module.exports = route

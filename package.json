@@ -27,6 +27,7 @@
     "express": "^4.18.1",
     "mongoose": "^6.3.8",
     "moralis": "^1.8.0",
+    "node-fetch": "^2.6.6",
     "nodemon": "^2.0.16",
     "parse-server": "^5.2.3"
   }

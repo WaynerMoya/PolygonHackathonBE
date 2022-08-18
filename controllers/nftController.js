@@ -1,5 +1,6 @@
 /* Importing the Moralis library. */
 const Moralis = require("moralis/node");
+const fetch = require('node-fetch');
 
 /* This is how you can use environment variables in Node.js. */
 const serverUrl = process.env.MORALIS_SERVER_URL
@@ -530,6 +531,87 @@ const nftController = {
                 success: true,
                 message: 'Get NFTs from cause successfully',
                 nfts: results
+            })
+
+        } catch (error) {
+            /* Returning a JSON object with the message and success. */
+            return res.status(500).json({
+                message: error?.message,
+                success: false
+            })
+        }
+
+    },
+    
+    getNFTsFromAddressAndTokenId: async (req, res) => {
+
+        try {
+
+            const { address, id } = req.params
+
+            if (!address || !id) {
+                return res.status(500).json({
+                    success: false,
+                    message: 'Missing parameter'
+                })
+            }
+
+            const addressCauseWithOutNumber = address.replace(/[0-9]/g, '');
+
+            const tableCauseNFTs = Moralis.Object.extend(addressCauseWithOutNumber);
+
+            const query = new Moralis.Query(tableCauseNFTs);
+
+            const results = await query
+            .equalTo("uid", id)
+            .first();
+
+           
+
+            if(results){
+                const Causes = Moralis.Object.extend("Causes");
+
+                const queryFoundation = new Moralis.Query(Causes);
+    
+                const pipeline = [
+                    {
+                        lookup: {
+                            from: 'Foundation',
+                            localField: 'nftArtist',
+                            foreignField: 'ethAddress',
+                            as: 'ethAddress'
+                        }
+                    }
+                ]
+    
+            const resultsFoundation = await queryFoundation
+            .equalTo('contractAddress',address)
+            .aggregate(pipeline);
+                results.set('owned', `${results.get('owner').slice(0, 2)}...${results.get('owner').slice(results.get('owner').length - 4)}`)
+                let urlArr = results.get('tokenUri').split("/");
+                let ipfsHash = urlArr[urlArr.length - 1];
+                let url = `https://gateway.moralisipfs.com/ipfs/${ipfsHash}`;
+                let response = await fetch(url);
+                let jsonToAdd = await response.json();
+                results.set('description', jsonToAdd.description);
+                results.set('tokenId', id);
+                results.set('img', jsonToAdd.animation_url);
+                results.set('title', jsonToAdd.name);
+                results.set('price', 0);
+                results.set('cause', resultsFoundation[0].title);
+                
+                const { image, name } = resultsFoundation[0].ethAddress[0];
+                
+                results.set('logo_foundation', image);
+                results.set('name_foundation', name);
+                results.set('status', true);
+                results.set('itemsActivity', []);
+            }
+
+            res.status(200).json({
+                success: true,
+                message: 'Get NFT from address and id successfully',
+                nft: results
             })
 
         } catch (error) {
