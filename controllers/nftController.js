@@ -615,13 +615,111 @@ const nftController = {
             })
 
         } catch (error) {
+            return res.status(500).json({
+                message: error?.message,
+                success: false
+            })
+        }
+    },
+    getNFTsFromWallet: async (req, res) => {
+
+        try {
+
+            const { wallet } = req.params
+
+            const Causes = Moralis.Object.extend("Causes");
+
+            const query = new Moralis.Query(Causes);
+
+            const pipeline = [
+                {
+                    lookup: {
+                        from: 'Foundation',
+                        localField: 'nftArtist',
+                        foreignField: 'ethAddress',
+                        as: 'ethAddress'
+                    }
+                }
+            ]
+
+            const results = await query.aggregate(pipeline);
+
+            if (!results) {
+                return res.status(404).json({
+                    message: 'Error to get causes',
+                    success: false
+                })
+            }
+
+            const causesWithCustomContractAddress = results.map(cause => {
+
+                const { contractAddress, nftArtist } = cause
+
+                const { image, name } = cause.ethAddress[0]
+
+                const contractAddressWithoutNumber = contractAddress.replace(/[0-9]/g, '');
+
+                return {
+                    contractAddressWithoutNumber,
+                    nftArtist,
+                    image,
+                    name
+                }
+            })
+
+            const nftsFromWallet = []
+
+            for (let i = 0; i < causesWithCustomContractAddress.length; i++) {
+
+                const table = Moralis.Object.extend(causesWithCustomContractAddress[i].contractAddressWithoutNumber);
+
+                const query = new Moralis.Query(table);
+
+                query.equalTo("owner", wallet);
+
+                const results = await query.find();
+
+                if (results.length > 0) {
+
+                    const nftsCausesWithOutNumbers = results.map(nft => {
+
+                        const { uid, tokenUri, owner, createdAt } = nft.attributes
+
+                        return {
+                            contractAddressWithoutNumber: causesWithCustomContractAddress[i].contractAddressWithoutNumber,
+                            nftArtist: causesWithCustomContractAddress[i].nftArtist,
+                            imageFoundation: causesWithCustomContractAddress[i].image,
+                            nameFoundation: causesWithCustomContractAddress[i].name,
+                            uid,
+                            tokenUri,
+                            owner,
+                            createdAt
+                        }
+                    })
+
+                    nftsFromWallet.push(...nftsCausesWithOutNumbers)
+                }
+
+            }
+
+            const sortArrayNFTs = nftsFromWallet.sort(
+                (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+            )
+
+            res.status(200).json({
+                success: true,
+                message: 'Get NFTs from wallet successfully',
+                nfts: sortArrayNFTs
+            })
+
+
+        } catch (error) {
             /* Returning a JSON object with the message and success. */
             return res.status(500).json({
                 message: error?.message,
                 success: false
             })
         }
-
     }
 }
 
