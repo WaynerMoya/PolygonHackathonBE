@@ -419,93 +419,69 @@ const nftController = {
     getNewestNFTs: async (req, res) => {
         try {
 
-            const Causes = Moralis.Object.extend("Causes");
+            const NewestNFT = Moralis.Object.extend("NewestNFT");
 
-            const query = new Moralis.Query(Causes);
+            const queryNewestNFT = new Moralis.Query(NewestNFT);
 
-            const pipeline = [
+            // Retrieve the most recent ones
+            queryNewestNFT.descending("createdAt");
+
+            // Only retrieve the last ten
+            queryNewestNFT.limit(12);
+
+            const pipelineNewestAndCauses = [
                 {
-                    lookup: {
-                        from: 'Foundation',
-                        localField: 'nftArtist',
-                        foreignField: 'ethAddress',
+                    lookup:
+                    {
+                        from: 'Causes',
+                        localField: 'nftContract',
+                        foreignField: 'contractAddress',
                         as: 'ethAddress'
+                    },
+                },
+                {
+                    lookup:
+                    {
+                        from: 'Foundation',
+                        localField: 'ethAddress.nftArtist',
+                        foreignField: 'ethAddress',
+                        as: 'ethAddress2'
                     }
                 }
             ]
 
-            const results = await query.aggregate(pipeline);
+            const resultNewestNFTsAndCauses = await queryNewestNFT.aggregate(pipelineNewestAndCauses);
 
-            if (!results) {
+            // ----
+
+            if (!resultNewestNFTsAndCauses) {
                 return res.status(404).json({
                     message: 'Error to get causes',
                     success: false
                 })
             }
 
-            const causesWithCustomContractAddress = results.map(cause => {
 
-                const { contractAddress, nftArtist } = cause
+            for (let i = 0; i < resultNewestNFTsAndCauses.length; i++) {
 
-                const { image, name } = cause.ethAddress[0]
 
-                const contractAddressWithoutNumber = contractAddress.replace(/[0-9]/g, '');
 
-                return {
-                    contractAddressWithoutNumber,
-                    nftArtist,
-                    image,
-                    name
-                }
-            })
+                resultNewestNFTsAndCauses[i].set('tokenId', resultNewestNFTsAndCauses[i].get('uid'));
 
-            const newest30NFTs = []
-
-            for (let i = 0; i < causesWithCustomContractAddress.length; i++) {
-
-                const table = Moralis.Object.extend(causesWithCustomContractAddress[i].contractAddressWithoutNumber);
-
-                const query = new Moralis.Query(table);
-
-                const results = await query.find();
-
-                const nftsCausesWithOutNumbers = results.map(nft => {
-
-                    const { uid, tokenUri, owner, createdAt, address } = nft.attributes
-
-                    return {
-                        contractAddressWithoutNumber: causesWithCustomContractAddress[i].contractAddressWithoutNumber,
-                        nftArtist: causesWithCustomContractAddress[i].nftArtist,
-                        logo_foundation: causesWithCustomContractAddress[i].image,
-                        name_foundation: causesWithCustomContractAddress[i].name,
-                        uid,
-                        tokenUri,
-                        owner,
-                        createdAt,
-                        address
-                    }
-                })
-
-                newest30NFTs.push(...nftsCausesWithOutNumbers)
-            }
-
-            let sortArrayNFTs = newest30NFTs.sort(
-                (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-            ).slice(0, 12)
-            
-            for ( let i = 0 ; i < sortArrayNFTs.length; i++){
-                sortArrayNFTs[i].tokenId = sortArrayNFTs[i].uid;
-                
-                let urlArr = sortArrayNFTs[i].tokenUri.split("/");
+                let urlArr = resultNewestNFTsAndCauses[i].get('tokenUri').split("/");
                 let ipfsHash = urlArr[urlArr.length - 1];
                 let url = `https://gateway.moralisipfs.com/ipfs/${ipfsHash}`;
                 let response = await fetch(url);
                 let jsonToAdd = await response.json();
 
-                sortArrayNFTs[i].img = jsonToAdd.animation_url;
-                sortArrayNFTs[i].title = jsonToAdd.name;
-                sortArrayNFTs[i].price = 1;
-                sortArrayNFTs[i].status = true;
+                resultNewestNFTsAndCauses[i].set('img', jsonToAdd.animation_url);
+
+                resultNewestNFTsAndCauses[i].set('title', jsonToAdd.name);
+
+                resultNewestNFTsAndCauses[i].set('price', 1);
+
+                resultNewestNFTsAndCauses[i].set('status', true);
+
             }
 
 
@@ -559,7 +535,7 @@ const nftController = {
         }
 
     },
-    
+
     getNFTsFromAddressAndTokenId: async (req, res) => {
 
         try {
@@ -580,16 +556,16 @@ const nftController = {
             const query = new Moralis.Query(tableCauseNFTs);
 
             const results = await query
-            .equalTo("uid", id)
-            .first();
+                .equalTo("uid", id)
+                .first();
 
-           
 
-            if(results){
+
+            if (results) {
                 const Causes = Moralis.Object.extend("Causes");
 
                 const queryFoundation = new Moralis.Query(Causes);
-    
+
                 const pipeline = [
                     {
                         lookup: {
@@ -600,10 +576,10 @@ const nftController = {
                         }
                     }
                 ]
-    
-            const resultsFoundation = await queryFoundation
-            .equalTo('contractAddress',address)
-            .aggregate(pipeline);
+
+                const resultsFoundation = await queryFoundation
+                    .equalTo('contractAddress', address)
+                    .aggregate(pipeline);
                 results.set('owned', `${results.get('owner').slice(0, 2)}...${results.get('owner').slice(results.get('owner').length - 4)}`)
                 let urlArr = results.get('tokenUri').split("/");
                 let ipfsHash = urlArr[urlArr.length - 1];
@@ -616,9 +592,9 @@ const nftController = {
                 results.set('title', jsonToAdd.name);
                 results.set('price', 0);
                 results.set('cause', resultsFoundation[0].title);
-                
+
                 const { image, name } = resultsFoundation[0].ethAddress[0];
-                
+
                 results.set('logo_foundation', image);
                 results.set('name_foundation', name);
                 results.set('status', true);
@@ -700,7 +676,7 @@ const nftController = {
 
                     const nftsCausesWithOutNumbers = results.map(nft => {
 
-                        const { uid, tokenUri, owner, createdAt , address} = nft.attributes
+                        const { uid, tokenUri, owner, createdAt, address } = nft.attributes
 
                         return {
                             contractAddressWithoutNumber: causesWithCustomContractAddress[i].contractAddressWithoutNumber,
@@ -724,9 +700,9 @@ const nftController = {
                 (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
             )
 
-            for ( let i = 0 ; i < sortArrayNFTs.length; i++){
+            for (let i = 0; i < sortArrayNFTs.length; i++) {
                 sortArrayNFTs[i].tokenId = sortArrayNFTs[i].uid;
-                
+
                 let urlArr = sortArrayNFTs[i].tokenUri.split("/");
                 let ipfsHash = urlArr[urlArr.length - 1];
                 let url = `https://gateway.moralisipfs.com/ipfs/${ipfsHash}`;
