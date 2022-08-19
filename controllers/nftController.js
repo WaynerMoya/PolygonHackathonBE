@@ -15,6 +15,17 @@ const getParametersNameAndValue = require("../global/ssm-parameters")
 const fs = require("fs");
 
 
+const consultTable = async (table, paramValue) => {
+    const Table = Moralis.Object.extend(table);
+  
+    const query = new Moralis.Query(Table);
+  
+    query.equalTo('nftContract', paramValue);
+  
+    const result = await query.first();
+  
+    return result;
+  };
 /**
  * It takes a URL to an image, converts it to base64, uploads it to IPFS, 
  * and returns the IPFS hash
@@ -713,6 +724,15 @@ const nftController = {
                 sortArrayNFTs[i].title = jsonToAdd.name;
                 sortArrayNFTs[i].price = 1;
                 sortArrayNFTs[i].status = true;
+
+                const market = await consultTable(
+                    "CauseMarket",
+                    sortArrayNFTs[i].address
+                  );
+                
+                if(market){ 
+                    sortArrayNFTs[i].marketAddress = market.get("marketplaceAddress");
+                }
             }
 
             res.status(200).json({

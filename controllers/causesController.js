@@ -1,214 +1,213 @@
 /* Importing the Moralis library. */
 const Moralis = require("moralis/node");
 
-const {
-    uploadImage
-} = require('../global/upload-data')
+const { uploadImage } = require("../global/upload-data");
 
+const consultTable = async (table, paramValue) => {
+  const Table = Moralis.Object.extend(table);
 
-const consultTable = async (table, paramName, paramValue) => {
+  const query = new Moralis.Query(Table);
 
-    const Table = Moralis.Object.extend(table);
+  query.equalTo('nftContract', paramValue);
 
-    const query = new Moralis.Query(Table);
+  const result = await query.first();
 
-    query.equalTo(paramName, paramValue);
-
-    const result = await query.first();
-
-    return result;
-}
+  return result;
+};
 
 const causeController = {
+  createCauseByWallet: async (req, res) => {
+    try {
+      const { wallet, image, title, goal, initialDate, duration } = req.body;
 
-    createCauseByWallet: async (req, res) => {
+      if (!wallet || !image || !title || !goal || !initialDate || !duration) {
+        return res.status(500).json({
+          success: false,
+          message: "Missing parameters",
+        });
+      }
 
-        try {
+      /* Uploading the image to IPFS. */
+      const imageIPFS = await uploadImage(image, title);
 
-            const { wallet, image, title, goal, initialDate, duration } = req.body
+      if (image instanceof Error) {
+        return res.status(400).json({
+          message: image?.message,
+          success: false,
+        });
+      }
 
-            if (!wallet || !image || !title || !goal || !initialDate || !duration) {
-                return res.status(500).json({
-                    success: false,
-                    message: 'Missing parameters'
-                })
-            }
+      const Cause = Moralis.Object.extend("Cause");
 
-            /* Uploading the image to IPFS. */
-            const imageIPFS = await uploadImage(image, title)
+      const cause = new Cause();
 
-            if (image instanceof Error) {
-                return res.status(400).json({
-                    message: image?.message,
-                    success: false
-                })
-            }
+      cause.set("ethAddress", wallet);
+      cause.set("image", imageIPFS);
+      cause.set("title", title);
+      cause.set("goal", goal);
+      cause.set("initialDate", initialDate);
+      cause.set("duration", duration);
 
-            const Cause = Moralis.Object.extend("Cause");
+      await cause.save();
 
-            const cause = new Cause();
+      if (cause?.error) {
+        return res.status(400).json({
+          message: cause?.error,
+          success: false,
+        });
+      }
 
-            cause.set("ethAddress", wallet);
-            cause.set("image", imageIPFS);
-            cause.set("title", title);
-            cause.set("goal", goal);
-            cause.set("initialDate", initialDate);
-            cause.set("duration", duration);
-
-            await cause.save()
-
-            if (cause?.error) {
-
-                return res.status(400).json({
-                    message: cause?.error,
-                    success: false
-                })
-
-            }
-
-            return res.status(201).json({
-                message: 'Create cause successfully',
-                success: true,
-                cause
-            })
-
-        } catch (error) {
-
-            return res.status(500).json({
-                success: false,
-                message: error.message || 'Error to create cause by wallet'
-            })
-        }
-
-    },
-    getCauseByWallet: async (req, res) => {
-        try {
-
-            const { wallet } = req.params
-
-            const { ethAddress } = req.body
-
-            const Cause = Moralis.Object.extend("Causes");
-
-            const query = new Moralis.Query(Cause);
-
-            query.equalTo("nftArtist", wallet);
-
-            const result = await query.find();
-
-            if (ethAddress !== wallet) {
-
-                for (let i = 0; i < result.length; i++) {
-
-                    // TimeLock -> CauseTimeLock
-
-                    // Dao -> CauseDao
-
-                    // Market -> CauseMarket
-
-                    const { address } = result[i].attributes
-
-                    const timeLock = await consultTable('CauseTimeLock', 'timelockAddress', address)
-
-                    if (!timeLock) {
-                        result[i].attributes.timelockAddress = null
-                        result[i].attributes.daoAddress = null
-                        result[i].attributes.marketAddress = null
-                        continue;
-                    }
-
-                    result[i].attributes.timeLockAddress = timeLock.get('timelockAddress')
-
-                    const dao = await consultTable('CauseDao', 'daoAddress', address)
-
-                    if (!dao) {
-                        result[i].attributes.daoAddress = null
-                        result[i].attributes.marketAddress = null
-                        continue;
-                    }
-
-                    result[i].attributes.daoAddress = dao.get('daoAddress')
-
-                    const market = await consultTable('CauseMarket', 'marketAddress', address)
-
-                    if (!market) {
-                        result[i].attributes.marketAddress = null
-                        continue;
-                    }
-
-                    result[i].attributes.marketAddress = market.get('marketAddress')
-                    
-                }
-
-                ///Aquiiiii
-
-            }
-
-            if (!result) {
-                return res.status(200).json({
-                    message: 'Error to get cause',
-                    success: false
-                })
-            }
-
-            // const options = {
-            //     chain: "mumbai",
-            //     address: result.get('contractAddress')
-            //   };
-            // const balances = await Moralis.Web3API.account.getTokenBalances(options)
-            return res.status(200).json({
-                message: 'cause searched successfully',
-                causes: result,
-                success: true,
-                // balances
-            })
-
-        } catch (error) {
-
-            return res.status(500).json({
-                success: false,
-                message: error.message || 'Error to get cause by wallet'
-            })
-
-        }
-    },
-    getStepsByAddress: async (req, res) => {
-        try {
-
-            const { address } = req.params
-
-            const Steps = Moralis.Object.extend("Steps");
-
-            const query = new Moralis.Query(Steps);
-
-            query.equalTo("contractAddress", address);
-
-            const result = await query.find();
-
-
-            if (!result) {
-                return res.status(200).json({
-                    message: 'Error to get cause',
-                    success: false
-                })
-            }
-            return res.status(200).json({
-                message: 'cause searched successfully',
-                steps: result,
-                success: true,
-                // balances
-            })
-
-        } catch (error) {
-
-            return res.status(500).json({
-                success: false,
-                message: error.message || 'Error to get cause by wallet'
-            })
-
-        }
+      return res.status(201).json({
+        message: "Create cause successfully",
+        success: true,
+        cause,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: error.message || "Error to create cause by wallet",
+      });
     }
+  },
+  getCauseByWallet: async (req, res) => {
+    try {
+      const { wallet } = req.params;
 
-}
+      const { ethAddress } = req.body;
 
-module.exports = causeController
+      const Cause = Moralis.Object.extend("Causes");
+
+      const query = new Moralis.Query(Cause);
+
+      query.equalTo("nftArtist", wallet);
+
+      let result = await query.find();
+
+      for (let i = result.length - 1; i >= 0; i--) {
+        // TimeLock -> CauseTimeLock
+
+        // Dao -> CauseDao
+
+        // Market -> CauseMarket
+
+        const { contractAddress } = result[i].attributes;
+
+        const timeLock = await consultTable(
+          "CauseTimeLock",
+          contractAddress
+        );
+        if (!timeLock) {
+          result[i].set('timelockAddress' , null );
+          result[i].set('daoAddress' , null );
+          result[i].set('roleGranted' , null );
+          result[i].set('marketAddress' , null );
+          if (ethAddress !== wallet) {
+            result.splice(i, 1);
+          }
+          continue;
+        }
+
+        result[i].set('timelockAddress', timeLock.get("timelockAddress"));
+
+        const dao = await consultTable("CauseDao", contractAddress);
+
+        if (!dao) {
+          result[i].set('daoAddress', null);
+          result[i].set('marketAddress', null);
+          result[i].set('roleGranted' , null );
+          if (ethAddress !== wallet) {
+            result.splice(i, 1);
+          }
+          continue;
+        }
+
+        result[i].set('daoAddress', dao.get("daoAddress"));
+
+        const roleGranted = await consultTable("CauseTimelockGranted", contractAddress);
+
+        if (!roleGranted) {
+            result[i].set('marketAddress', null);
+            result[i].set('roleGranted' , null );
+            if (ethAddress !== wallet) {
+              result.splice(i, 1);
+            }
+            continue;
+          }
+
+        result[i].set('roleGranted', true);
+
+        const market = await consultTable(
+          "CauseMarket",
+          contractAddress
+        );
+
+        if (!market) {
+          result[i].set('marketAddress' , null);
+          if (ethAddress !== wallet) {
+            result.splice(i, 1);
+          }
+          continue;
+        }
+
+        result[i].set('marketAddress', market.get("marketplaceAddress"));
+      }
+
+      if (!result) {
+        return res.status(200).json({
+          message: "Error to get cause",
+          success: false,
+        });
+      }
+
+      // const options = {
+      //     chain: "mumbai",
+      //     address: result.get('contractAddress')
+      //   };
+      // const balances = await Moralis.Web3API.account.getTokenBalances(options)
+      return res.status(200).json({
+        message: "cause searched successfully",
+        causes: result,
+        success: true,
+        // balances
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: error.message || "Error to get cause by wallet",
+      });
+    }
+  },
+  getStepsByAddress: async (req, res) => {
+    try {
+      const { address } = req.params;
+
+      const Steps = Moralis.Object.extend("Steps");
+
+      const query = new Moralis.Query(Steps);
+
+      query.equalTo("contractAddress", address);
+
+      const result = await query.find();
+
+      if (!result) {
+        return res.status(200).json({
+          message: "Error to get cause",
+          success: false,
+        });
+      }
+      return res.status(200).json({
+        message: "cause searched successfully",
+        steps: result,
+        success: true,
+        // balances
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: error.message || "Error to get cause by wallet",
+      });
+    }
+  },
+};
+
+module.exports = causeController;
