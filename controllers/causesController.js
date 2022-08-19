@@ -71,16 +71,19 @@ const causeController = {
         try {
 
             const { wallet } = req.params
+            const { ethAddress } = req.body
 
             const Cause = Moralis.Object.extend("Causes");
 
             const query = new Moralis.Query(Cause);
 
             query.equalTo("nftArtist", wallet);
-
             const result = await query.find();
            
-              
+            if(ethAddress !== wallet){
+                ///Aquiiiii                
+
+            }
             if (!result) {
                 return res.status(200).json({
                     message: 'Error to get cause',

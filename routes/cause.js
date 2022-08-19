@@ -13,7 +13,7 @@ route.use(express.json())
 route.post('/create-cause-by-wallet', causeController.createCauseByWallet)
 
 /* This is creating a new route for the `/create-nft` endpoint. */
-route.get('/get-cause-by-wallet/:wallet', causeController.getCauseByWallet)
+route.post('/get-cause-by-wallet/:wallet', causeController.getCauseByWallet)
 route.get('/get-steps-by-address/:address', causeController.getStepsByAddress)
 
 /* This is exporting the route object so that it can be used in other files. */

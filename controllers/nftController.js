@@ -700,17 +700,18 @@ const nftController = {
 
                     const nftsCausesWithOutNumbers = results.map(nft => {
 
-                        const { uid, tokenUri, owner, createdAt } = nft.attributes
+                        const { uid, tokenUri, owner, createdAt , address} = nft.attributes
 
                         return {
                             contractAddressWithoutNumber: causesWithCustomContractAddress[i].contractAddressWithoutNumber,
                             nftArtist: causesWithCustomContractAddress[i].nftArtist,
-                            imageFoundation: causesWithCustomContractAddress[i].image,
-                            nameFoundation: causesWithCustomContractAddress[i].name,
+                            logo_foundation: causesWithCustomContractAddress[i].image,
+                            name_foundation: causesWithCustomContractAddress[i].name,
                             uid,
                             tokenUri,
                             owner,
-                            createdAt
+                            createdAt,
+                            address
                         }
                     })
 
@@ -719,9 +720,24 @@ const nftController = {
 
             }
 
-            const sortArrayNFTs = nftsFromWallet.sort(
+            let sortArrayNFTs = nftsFromWallet.sort(
                 (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
             )
+
+            for ( let i = 0 ; i < sortArrayNFTs.length; i++){
+                sortArrayNFTs[i].tokenId = sortArrayNFTs[i].uid;
+                
+                let urlArr = sortArrayNFTs[i].tokenUri.split("/");
+                let ipfsHash = urlArr[urlArr.length - 1];
+                let url = `https://gateway.moralisipfs.com/ipfs/${ipfsHash}`;
+                let response = await fetch(url);
+                let jsonToAdd = await response.json();
+
+                sortArrayNFTs[i].img = jsonToAdd.animation_url;
+                sortArrayNFTs[i].title = jsonToAdd.name;
+                sortArrayNFTs[i].price = 1;
+                sortArrayNFTs[i].status = true;
+            }
 
             res.status(200).json({
                 success: true,
