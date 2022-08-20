@@ -489,16 +489,23 @@ const nftController = {
 
                 resultNewestNFTsAndCauses[i].title = jsonToAdd.name;
 
-                resultNewestNFTsAndCauses[i].price = 1;
+                resultNewestNFTsAndCauses[i].price = 0;
 
-                resultNewestNFTsAndCauses[i].status = true;
+                resultNewestNFTsAndCauses[i].status = false;
                 resultNewestNFTsAndCauses[i].address = resultNewestNFTsAndCauses[i].nftContract;
 
 
 
                 resultNewestNFTsAndCauses[i].logo_foundation = resultNewestNFTsAndCauses[i].ethAddress2[0].image;
                 resultNewestNFTsAndCauses[i].name_foundation = resultNewestNFTsAndCauses[i].ethAddress2[0].name;
-
+                const market = await consultTable(
+                    "CauseMarket",
+                    resultNewestNFTsAndCauses[i].nftContract
+                  );
+                
+                if(market){ 
+                    resultNewestNFTsAndCauses[i].marketAddress = market.get("marketplaceAddress");
+                }
             }
 
 
@@ -596,7 +603,14 @@ const nftController = {
                 resultNewestNFTsAndCauses[i].logo_foundation = resultNewestNFTsAndCauses[i].ethAddress2[0].image;
                 resultNewestNFTsAndCauses[i].name_foundation = resultNewestNFTsAndCauses[i].ethAddress2[0].name;
 
+                const market = await consultTable(
+                    "CauseMarket",
+                    resultNewestNFTsAndCauses[i].nftContract
+                  );
                 
+                if(market){ 
+                    resultNewestNFTsAndCauses[i].marketAddress = market.get("marketplaceAddress");
+                }
                 
             }
 
@@ -704,8 +718,17 @@ const nftController = {
 
                 results.logo_foundation = image;
                 results.name_foundation = name;
+                results.address = results.nftContract;
                 results.status = true;
                 results.itemsActivity = [];
+                const market = await consultTable(
+                    "CauseMarket",
+                    results.nftContract
+                  );
+                
+                if(market){ 
+                    results.marketAddress = market.get("marketplaceAddress");
+                }
             }
 
             res.status(200).json({
@@ -786,9 +809,9 @@ const nftController = {
 
                 resultNewestNFTsAndCauses[i].title = jsonToAdd.name;
 
-                resultNewestNFTsAndCauses[i].price = 1;
+                resultNewestNFTsAndCauses[i].price = 0;
 
-                resultNewestNFTsAndCauses[i].status = true;
+                resultNewestNFTsAndCauses[i].status = false;
                 resultNewestNFTsAndCauses[i].address = resultNewestNFTsAndCauses[i].nftContract;
 
 
@@ -820,6 +843,45 @@ const nftController = {
             return res.status(500).json({
                 message: error?.message,
                 success: false
+            })
+        }
+    },
+    tradeNft: async (req, res) => {
+        
+        try {
+
+            const { ethAddress, tokenId, address } = req.body
+
+            if (!ethAddress || !tokenId || !address) {
+                return res.status(200).json({
+                    success: false,
+                    message: 'Missing parameter'
+                })
+            }
+            const NewestNFT = Moralis.Object.extend("NewestNFT");
+
+            const queryNewestNFT = new Moralis.Query(NewestNFT);
+
+            queryNewestNFT.equalTo('nftContract', address)
+            queryNewestNFT.equalTo('uid', tokenId)
+
+            const result = await queryNewestNFT.first();
+            result.set('owner', ethAddress);
+            result.save();
+            
+
+            res.status(200).json({
+                success: true
+            })
+
+
+        } catch (error) {
+            /* Returning a JSON object with the message and success. */
+            return res.status(
+                200
+            ).json({
+                success: false,
+                error: error?.message,
             })
         }
     }

@@ -3,17 +3,18 @@ const Moralis = require("moralis/node");
 
 const { uploadImage } = require("../global/upload-data");
 
-const consultTable = async (table, paramValue) => {
+const consultTable = async (table, paramValue, columnName = 'nftContract') => {
   const Table = Moralis.Object.extend(table);
 
   const query = new Moralis.Query(Table);
 
-  query.equalTo('nftContract', paramValue);
+  query.equalTo(columnName, paramValue);
 
   const result = await query.first();
 
   return result;
 };
+
 
 const causeController = {
   createCauseByWallet: async (req, res) => {
@@ -84,11 +85,6 @@ const causeController = {
       let result = await query.find();
 
       for (let i = result.length - 1; i >= 0; i--) {
-        // TimeLock -> CauseTimeLock
-
-        // Dao -> CauseDao
-
-        // Market -> CauseMarket
 
         const { contractAddress } = result[i].attributes;
 
@@ -101,6 +97,7 @@ const causeController = {
           result[i].set('daoAddress' , null );
           result[i].set('roleGranted' , null );
           result[i].set('marketAddress' , null );
+          result[i].set('proposalId' , null );
           if (ethAddress !== wallet) {
             result.splice(i, 1);
           }
@@ -115,6 +112,7 @@ const causeController = {
           result[i].set('daoAddress', null);
           result[i].set('marketAddress', null);
           result[i].set('roleGranted' , null );
+          result[i].set('proposalId' , null );
           if (ethAddress !== wallet) {
             result.splice(i, 1);
           }
@@ -128,6 +126,7 @@ const causeController = {
         if (!roleGranted) {
             result[i].set('marketAddress', null);
             result[i].set('roleGranted' , null );
+            result[i].set('proposalId' , null );
             if (ethAddress !== wallet) {
               result.splice(i, 1);
             }
@@ -143,6 +142,7 @@ const causeController = {
 
         if (!market) {
           result[i].set('marketAddress' , null);
+          result[i].set('proposalId' , null );
           if (ethAddress !== wallet) {
             result.splice(i, 1);
           }
@@ -150,6 +150,15 @@ const causeController = {
         }
 
         result[i].set('marketAddress', market.get("marketplaceAddress"));
+
+        const proposal = await consultTable("CauseProposal", contractAddress, 'nftAddress');
+
+        if (!proposal) {
+          result[i].set('proposalId' , null );
+          continue;
+        }
+        result[i].set('proposalId', proposal.get("proposalId"));
+      
       }
 
       if (!result) {
@@ -159,15 +168,10 @@ const causeController = {
         });
       }
 
-      // const options = {
-      //     chain: "mumbai",
-      //     address: result.get('contractAddress')
-      //   };
-      // const balances = await Moralis.Web3API.account.getTokenBalances(options)
       return res.status(200).json({
         message: "cause searched successfully",
         causes: result,
-        success: true,
+        success: true
         // balances
       });
     } catch (error) {
