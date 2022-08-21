@@ -136,6 +136,13 @@ app.use('/step', step)
 /****************************************************************************************** */
 /****************************************************************************************** */
 
+app.get('/', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'OK'
+  })
+})
+
 /* Telling the server to listen for requests on the port specified by the variable `port`. */
 app.listen(port, () => {
 
