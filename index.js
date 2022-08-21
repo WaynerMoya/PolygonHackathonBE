@@ -67,11 +67,15 @@ getParametersNameAndValue().then(params => {
   });
 })
 
-
 /* This is a whitelist of domains that are allowed to make requests to the server. */
 const whitelist = [
   "http://localhost:3000",
-  "http://polygon-alb-1640202886.us-east-2.elb.amazonaws.com"
+  "http://polygon-alb-1640202886.us-east-2.elb.amazonaws.com",
+  "http://donaty-web-app.s3-website-us-east-1.amazonaws.com",
+  "http://polygon-alb-1640202886.us-east-2.elb.amazonaws.com/*",
+  "http://donaty-web-app.s3-website-us-east-1.amazonaws.com/*",
+  "http://polygon-alb-1640202886.us-east-2.elb.amazonaws.com/**",
+  "http://donaty-web-app.s3-website-us-east-1.amazonaws.com/**",
 ]
 
 /* This is a whitelist of domains that are allowed to make requests to the server. */
