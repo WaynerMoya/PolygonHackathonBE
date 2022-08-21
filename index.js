@@ -94,9 +94,14 @@ const corsOptions = {
 app.use(cors(corsOptions))
 
 /* This is setting the limit of the size of the request body to 50mb. */
-app.use(express.json({ limit: '50mb' }));
+app.use(express.json({ limit: '200mb' }));
 
-app.use(express.urlencoded({ limit: '50mb' }));
+app.use(express.urlencoded({
+  limit: '200mb', extended: true,
+  parameterLimit: 100000
+}));
+
+app.use(express.text({ limit: '200mb' }));
 
 /****************************************************************************************** */
 /****************************************************************************************** */
