@@ -427,6 +427,14 @@ const nftController = {
     getNewestNFTs: async (req, res) => {
         try {
 
+            const params = await getParametersNameAndValue()
+
+            /* Initializing the Moralis library. */
+            await Moralis.start({
+                serverUrl: params['moralis-server-url'].value,
+                appId: params['moralis-api-id'].value,
+                masterKey: params['moralis-master-key'].value
+            });
             const NewestNFT = Moralis.Object.extend("NewestNFT");
 
             const queryNewestNFT = new Moralis.Query(NewestNFT);
@@ -469,7 +477,6 @@ const nftController = {
                 })
             }
 
-            const params = await getParametersNameAndValue()
             const provider = new ethers.providers.JsonRpcProvider('https://rpc-mumbai.maticvigil.com/');
 
             const signer = new ethers.Wallet(
