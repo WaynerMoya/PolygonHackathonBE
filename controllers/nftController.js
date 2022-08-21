@@ -429,12 +429,6 @@ const nftController = {
 
             const params = await getParametersNameAndValue()
 
-            /* Initializing the Moralis library. */
-            await Moralis.start({
-                serverUrl: params['moralis-server-url'].value,
-                appId: params['moralis-api-id'].value,
-                masterKey: params['moralis-master-key'].value
-            });
             const NewestNFT = Moralis.Object.extend("NewestNFT");
 
             const queryNewestNFT = new Moralis.Query(NewestNFT);
