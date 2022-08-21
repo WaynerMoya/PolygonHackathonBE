@@ -512,9 +512,10 @@ const nftController = {
                 const status = await contract.callStatic.getListing(resultNewestNFTsAndCauses[i].address, resultNewestNFTsAndCauses[i].tokenId)
                 
                 resultNewestNFTsAndCauses[i].status = false;
+                resultNewestNFTsAndCauses[i].price = 0;
                 if (status["seller"] && status["seller"] !== '0x0000000000000000000000000000000000000000') {
                   resultNewestNFTsAndCauses[i].status = true;
-                  resultNewestNFTsAndCauses[i].price = Moralis.Units.FromWei(status["price"]);
+                  resultNewestNFTsAndCauses[i].price = parseFloat(Moralis.Units.FromWei(status["price"]));
                 }
             }
 
