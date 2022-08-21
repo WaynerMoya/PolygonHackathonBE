@@ -589,6 +589,13 @@ const nftController = {
 
             const marketAddress = market.get("marketplaceAddress");
 
+            const params = await getParametersNameAndValue()
+            const provider = new ethers.providers.JsonRpcProvider('https://rpc-mumbai.maticvigil.com/');
+
+            const signer = new ethers.Wallet(
+                params['metamask-private-key'].value,
+                provider
+             );
 
             for (let i = 0; i < resultNewestNFTsAndCauses.length; i++) {
 
@@ -624,6 +631,16 @@ const nftController = {
                     resultNewestNFTsAndCauses[i].marketAddress = market.get("marketplaceAddress");
                 }
                 
+                const contract = new ethers.Contract(resultNewestNFTsAndCauses[i].marketAddress, abiMarketPlace, signer);
+
+                const status = await contract.callStatic.getListing(resultNewestNFTsAndCauses[i].address, resultNewestNFTsAndCauses[i].tokenId)
+                
+                resultNewestNFTsAndCauses[i].status = false;
+                resultNewestNFTsAndCauses[i].price = 0;
+                if (status["seller"] && status["seller"] !== '0x0000000000000000000000000000000000000000') {
+                  resultNewestNFTsAndCauses[i].status = true;
+                  resultNewestNFTsAndCauses[i].price = parseFloat(Moralis.Units.FromWei(status["price"]));
+                }
             }
 
 
@@ -699,7 +716,14 @@ const nftController = {
 
             const resultNewestNFTsAndCauses = await queryNewestNFT.aggregate(pipelineNewestAndCauses);
 
+            const params = await getParametersNameAndValue()
+            const provider = new ethers.providers.JsonRpcProvider('https://rpc-mumbai.maticvigil.com/');
 
+            const signer = new ethers.Wallet(
+                params['metamask-private-key'].value,
+                provider
+             );
+             
             const market = await consultTable(
                 "CauseMarket",
                 address
@@ -740,6 +764,16 @@ const nftController = {
                 
                 if(market){ 
                     results.marketAddress = market.get("marketplaceAddress");
+                }
+                const contract = new ethers.Contract(results.marketAddress, abiMarketPlace, signer);
+
+                const status = await contract.callStatic.getListing(results.address, results.tokenId)
+                
+                results.status = false;
+                results.price = 0;
+                if (status["seller"] && status["seller"] !== '0x0000000000000000000000000000000000000000') {
+                  results.status = true;
+                  results.price = parseFloat(Moralis.Units.FromWei(status["price"]));
                 }
             }
 
