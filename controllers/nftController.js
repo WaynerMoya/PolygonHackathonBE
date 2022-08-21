@@ -1,11 +1,9 @@
 /* Importing the Moralis library. */
 const Moralis = require("moralis/node");
 const fetch = require('node-fetch');
-
+const { ethers  } = require('ethers');
+const abiMarketPlace = require('../assets/json/abiMartketPlace.json');
 /* This is how you can use environment variables in Node.js. */
-const serverUrl = process.env.MORALIS_SERVER_URL
-const appId = process.env.MORALIS_API_ID
-const masterKey = process.env.MORALIS_MASTER_KEY
 const chainMoralis = process.env.MORALIS_CHAIN
 
 const getParametersNameAndValue = require("../global/ssm-parameters")
@@ -23,7 +21,6 @@ const consultTable = async (table, paramValue) => {
     query.equalTo('nftContract', paramValue);
   
     const result = await query.first();
-  
     return result;
   };
 /**
@@ -472,13 +469,16 @@ const nftController = {
                 })
             }
 
+            const params = await getParametersNameAndValue()
+            const provider = new ethers.providers.JsonRpcProvider('https://rpc-mumbai.maticvigil.com/');
+
+            const signer = new ethers.Wallet(
+                params['metamask-private-key'].value,
+                provider
+             );
 
             for (let i = 0; i < resultNewestNFTsAndCauses.length; i++) {
-
-
-
                 resultNewestNFTsAndCauses[i].tokenId = resultNewestNFTsAndCauses[i].uid;
-
                 let urlArr = resultNewestNFTsAndCauses[i].tokenUri.split("/");
                 let ipfsHash = urlArr[urlArr.length - 1];
                 let url = `https://gateway.moralisipfs.com/ipfs/${ipfsHash}`;
@@ -505,6 +505,16 @@ const nftController = {
                 
                 if(market){ 
                     resultNewestNFTsAndCauses[i].marketAddress = market.get("marketplaceAddress");
+                }
+
+                const contract = new ethers.Contract(resultNewestNFTsAndCauses[i].marketAddress, abiMarketPlace, signer);
+
+                const status = await contract.callStatic.getListing(resultNewestNFTsAndCauses[i].address, resultNewestNFTsAndCauses[i].tokenId)
+                
+                resultNewestNFTsAndCauses[i].status = false;
+                if (status["seller"] && status["seller"] !== '0x0000000000000000000000000000000000000000') {
+                  resultNewestNFTsAndCauses[i].status = true;
+                  resultNewestNFTsAndCauses[i].price = Moralis.Units.FromWei(status["price"]);
                 }
             }
 
