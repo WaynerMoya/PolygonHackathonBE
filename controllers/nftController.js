@@ -838,6 +838,13 @@ const nftController = {
                 })
             }
 
+            const params = await getParametersNameAndValue()
+            const provider = new ethers.providers.JsonRpcProvider('https://rpc-mumbai.maticvigil.com/');
+
+            const signer = new ethers.Wallet(
+                params['metamask-private-key'].value,
+                provider
+             );
 
             for (let i = 0; i < resultNewestNFTsAndCauses.length; i++) {
 
@@ -873,6 +880,16 @@ const nftController = {
                 
                 if(market){ 
                     resultNewestNFTsAndCauses[i].marketAddress = market.get("marketplaceAddress");
+                }
+                const contract = new ethers.Contract(resultNewestNFTsAndCauses[i].marketAddress, abiMarketPlace, signer);
+
+                const status = await contract.callStatic.getListing(resultNewestNFTsAndCauses[i].address, resultNewestNFTsAndCauses[i].tokenId)
+                
+                resultNewestNFTsAndCauses[i].status = false;
+                resultNewestNFTsAndCauses[i].price = 0;
+                if (status["seller"] && status["seller"] !== '0x0000000000000000000000000000000000000000') {
+                  resultNewestNFTsAndCauses[i].status = true;
+                  resultNewestNFTsAndCauses[i].price = parseFloat(Moralis.Units.FromWei(status["price"]));
                 }
             }
 
