@@ -124,7 +124,7 @@ const postController = {
             })
         }
     },
-    
+
     getPostByFoundationWallet: async (req, res) => {
         try {
 
@@ -140,6 +140,8 @@ const postController = {
             const Post = Moralis.Object.extend("Post");
 
             const query = new Moralis.Query(Post);
+
+            query.descending('_created_at')
 
             query.equalTo("ethAddress", ethAddress);
 
