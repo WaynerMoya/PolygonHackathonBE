@@ -414,13 +414,8 @@ const nftController = {
 
       const queryNewestNFT = new Moralis.Query(NewestNFT);
 
-      // Retrieve the most recent ones
-      queryNewestNFT.descending("createdAt");
-
-      // Only retrieve the last ten
-      queryNewestNFT.limit(12);
-
       const pipelineNewestAndCauses = [
+        { sort: { "_created_at": -1 } },
         {
           lookup: {
             from: "Causes",
@@ -437,11 +432,14 @@ const nftController = {
             as: "ethAddress2",
           },
         },
-      ];
+        {
+          limit: 8
+        }
+      ]
 
-      const resultNewestNFTsAndCauses = await queryNewestNFT.aggregate(
+      let resultNewestNFTsAndCauses = await queryNewestNFT.aggregate(
         pipelineNewestAndCauses
-      );
+      )
 
       // ----
 
