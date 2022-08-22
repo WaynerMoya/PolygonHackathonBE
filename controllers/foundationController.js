@@ -103,6 +103,8 @@ const foundationController = {
 
             const query = new Moralis.Query(Foundation);
 
+            query.descending('_created_at')
+
             const results = await query.find();
 
             if (!results) {
