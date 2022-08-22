@@ -93,7 +93,7 @@ const corsOptions = {
 /* This is a whitelist of domains that are allowed to make requests to the server. */
 app.use(cors(corsOptions))
 
-/* This is setting the limit of the size of the request body to 50mb. */
+/* This is setting the limit of the size of the request body to 200mb. */
 app.use(express.json({
   limit: '200mb',
   extended: true,

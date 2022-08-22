@@ -22,6 +22,7 @@ const consultTable = async (table, paramValue) => {
   const result = await query.first();
   return result;
 };
+
 /**
  * It takes a URL to an image, converts it to base64, uploads it to IPFS,
  * and returns the IPFS hash
@@ -77,6 +78,7 @@ const uploadMetaData = async (name, description, image) => {
 
 /* Creating a new object called `nftController` with a function called `createNft`. */
 const nftController = {
+  /* The above code is creating a new NFT. */
   createOneNFT: async (req, res) => {
     try {
       const { name, description, file } = req.body;
@@ -406,6 +408,7 @@ const nftController = {
       });
     }
   },
+  /* This code is getting the newest NFTs from the database and returning them to the frontend. */
   getNewestNFTs: async (req, res) => {
     try {
       const params = await getParametersNameAndValue();
@@ -528,6 +531,7 @@ const nftController = {
       });
     }
   },
+  /* This code is getting the NFTs from a cause. */
   getNFTsFromCause: async (req, res) => {
     try {
       const { address } = req.params;
@@ -665,7 +669,7 @@ const nftController = {
       });
     }
   },
-
+  /* This code is used to get the NFTs from the address and token id. */
   getNFTsFromAddressAndTokenId: async (req, res) => {
     try {
       const { address, id } = req.params;
@@ -790,6 +794,7 @@ const nftController = {
       });
     }
   },
+  /* This code is getting the NFTs from a wallet. */
   getNFTsFromWallet: async (req, res) => {
     try {
       const { wallet } = req.params;
@@ -931,6 +936,9 @@ const nftController = {
       });
     }
   },
+  /* The above code is a function that is called when a user wants to trade an NFT. The function takes
+  in the ethAddress, tokenId, and address of the NFT. It then queries the database for the NFT and
+  sets the owner to the ethAddress. */
   tradeNft: async (req, res) => {
     try {
       const { ethAddress, tokenId, address } = req.body;
